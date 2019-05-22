@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -67,8 +68,6 @@ public class RxJavaTestFragment extends Fragment implements View.OnClickListener
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
-
-            disposable = manager.updateEvent().subscribe(this::updateView);
         }
     }
 
@@ -78,11 +77,18 @@ public class RxJavaTestFragment extends Fragment implements View.OnClickListener
         // Inflate the layout for this fragment
 
         View v = inflater.inflate(R.layout.fragment_rx_java_test, container, false);
+
+        Log.d("CREATE","disposable==>");
+        disposable = manager.updateEvent().subscribe(this::updateView);
+        Log.d("CREATE","disposable2==>"+disposable.toString());
+
         Button btChangeValue =(Button)v.findViewById(R.id.btChangeValue);
         btChangeValue.setOnClickListener(this);
 
         Button btGitTest =(Button)v.findViewById(R.id.btGitTest);
         btGitTest.setOnClickListener(this);
+
+
         return v;
     }
 
@@ -115,6 +121,7 @@ public class RxJavaTestFragment extends Fragment implements View.OnClickListener
 
     private void updateView(Temperature temperature) {
         //Toast.makeText(getView().getContext(),String.format("Current Temperature: %d", temperature.getDegree()),Toast.LENGTH_SHORT).show();
+        Log.d("Hear",temperature.getDegree()+":");
         TextView tvTemp = (TextView)getView().findViewById(R.id.txtTemp);
         tvTemp.setText(String.format("Current Temperature: %d", temperature.getDegree()));
     }
@@ -132,19 +139,15 @@ public class RxJavaTestFragment extends Fragment implements View.OnClickListener
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
-    Temperature temperature = new Temperature(20000);
 
+    Temperature temperature = new Temperature(20000);
     @Override
     public void onClick(View v) {
-        TextView tvTemp = (TextView)getView().findViewById(R.id.txtTemp);
-
         switch (v.getId()){
             case R.id.btChangeValue:
-
                 int degree = temperature.getDegree() +3000;
-
                 temperature.setCurrentTemperature(degree);
-                updateView(temperature);
+                manager.setTemperature(temperature);
                 break;
             case R.id.btGitTest:
                 break;

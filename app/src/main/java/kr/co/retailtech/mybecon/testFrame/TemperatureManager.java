@@ -1,5 +1,7 @@
 package kr.co.retailtech.mybecon.testFrame;
 
+import android.util.Log;
+
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -9,13 +11,11 @@ public class TemperatureManager {
 
     static class Temperature{
         private int currentTemperature;
-
-
         Temperature(int degree){
             this.currentTemperature = degree;
         }
 
-        int getDegree(){
+        public int getDegree(){
             return this.currentTemperature;
         }
 
@@ -28,7 +28,9 @@ public class TemperatureManager {
     private PublishSubject<Temperature> subject = PublishSubject.create();
 
     void setTemperature(Temperature temperature) {
+        Log.d("TEST", temperature.currentTemperature+":");
         subject.onNext(temperature);
+
     }
 
     Observable<Temperature> updateEvent() {
