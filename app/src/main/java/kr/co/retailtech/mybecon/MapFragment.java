@@ -10,18 +10,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.util.Arrays;
-
-import io.reactivex.Completable;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.Observable;
-import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
+import kr.co.retailtech.mybecon.reception.ReceptionUtil;
+import kr.co.retailtech.mybecon.reception.pojo.BeaconInfoManager;
+import kr.co.retailtech.mybecon.reception.pojo.BeaconInformation;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -43,9 +38,13 @@ public class MapFragment extends Fragment implements View.OnClickListener {
 
     TextView txtTemp;
 
+    private ReceptionUtil receptionUtil;
     private String TAG = MapFragment.class.getSimpleName();
 
     private OnFragmentInteractionListener mListener;
+
+    private Disposable disposable;
+    private final BeaconInfoManager manager = new BeaconInfoManager();
 
     public MapFragment() {
         // Required empty public constructor
@@ -69,39 +68,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         return fragment;
     }
 
-    private Observer<String> getAnimalsObserver() {
-        return new Observer<String>() {
-            @Override
-            public void onSubscribe(Disposable d) {
-                Log.d(TAG, "onSubscribe");
-                txtTemp.setText(txtTemp.getText() + "\r\n onSubscribe"+ "\r\n");
-            }
-
-            @Override
-            public void onNext(String s) {
-                Log.d(TAG, "Name: " + s);
-                txtTemp.setText(txtTemp.getText() + s + "\r\n");
-
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Log.e(TAG, "onError: " + e.getMessage());
-            }
-
-            @Override
-            public void onComplete() {
-
-                Log.d(TAG, "All items are emitted!");
-                txtTemp.setText(txtTemp.getText() + "All items are emitted! \r\n");
-            }
-        };
-    }
-
-
-    private Observable<String> getAnimalsObservable(){
-        return Observable.just("Ant", "Bee", "Cat", "Dog", "Fox");
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -110,26 +76,29 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_map, container, false);
-        txtTemp = (TextView)v.findViewById(R.id.txtTemp);
 
-        Observable<String> animalsObservable = getAnimalsObservable();
-        Observer<String> animalsObserver = getAnimalsObserver();
-        animalsObservable
-                .observeOn(Schedulers.io())
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .subscribe(animalsObserver);
+        receptionUtil = new ReceptionUtil(getActivity(),manager );
 
+        txtTemp = (TextView)v.findViewById(R.id.txtInfo);
         Button btAdd =(Button)v.findViewById(R.id.btAdd);
         btAdd.setOnClickListener(this);
+
+
         return v;
     }
+    public void updateView(BeaconInformation beaconInformation){
+        Log.d(TAG, "Hear2");
+        txtTemp.setText(beaconInformation.BeaconValueIndex_Major+":"+beaconInformation.BeaconValueIndex_Minor+":"+beaconInformation.BeaconValueIndex_Name+":"+beaconInformation.BeaconValueIndex_RSSI);
+    }
+
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -154,6 +123,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onDetach() {
         super.onDetach();
+        disposable.dispose();
         mListener = null;
     }
 
@@ -163,10 +133,9 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         switch (v.getId()){
             case R.id.btAdd:
                 txtTemp.setText("버튼을 눌렀습니다.");
-                Observable.just("doc1", "doc2,","doc3")
-                        .subscribe(
-                                document -> txtTemp.setText(txtTemp.getText()+":"+ document)
-                        );
+                disposable = manager.updateEvent().subscribe(this::updateView);
+
+                receptionUtil.startBeacon();
                 break;
         }
     }

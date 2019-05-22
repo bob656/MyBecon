@@ -10,12 +10,14 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.evrencoskun.tableview.TableView;
+
+import java.util.List;
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 import kr.co.retailtech.mybecon.testFrame.TemperatureManager.Temperature;
 import kr.co.retailtech.mybecon.R;
-
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
@@ -36,11 +38,12 @@ public class RxJavaTestFragment extends Fragment implements View.OnClickListener
 
     private OnFragmentInteractionListener mListener;
 
-    private final TemperatureManager manager = new TemperatureManager();
+    private final TemperatureManager manager ;
     private Disposable disposable;
 
     public RxJavaTestFragment() {
         // Required empty public constructor
+        manager = new TemperatureManager();
     }
 
     /**
@@ -68,7 +71,7 @@ public class RxJavaTestFragment extends Fragment implements View.OnClickListener
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
 
-            disposable = manager.updateEvent().subscribe(this::updateView);
+
         }
     }
 
@@ -83,8 +86,18 @@ public class RxJavaTestFragment extends Fragment implements View.OnClickListener
 
         Button btGitTest =(Button)v.findViewById(R.id.btGitTest);
         btGitTest.setOnClickListener(this);
+
+        disposable = manager.updateEvent().subscribe(this::updateView);
+
         return v;
     }
+
+    private void updateView(Temperature temperature) {
+        //Toast.makeText(getView().getContext(),String.format("Current Temperature: %d", temperature.getDegree()),Toast.LENGTH_SHORT).show();
+        TextView tvTemp = (TextView)getView().findViewById(R.id.txtTemp);
+        tvTemp.setText(String.format("Current Temperature: %d", temperature.getDegree()));
+    }
+
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -113,11 +126,6 @@ public class RxJavaTestFragment extends Fragment implements View.OnClickListener
         mListener = null;
     }
 
-    private void updateView(Temperature temperature) {
-        //Toast.makeText(getView().getContext(),String.format("Current Temperature: %d", temperature.getDegree()),Toast.LENGTH_SHORT).show();
-        TextView tvTemp = (TextView)getView().findViewById(R.id.txtTemp);
-        tvTemp.setText(String.format("Current Temperature: %d", temperature.getDegree()));
-    }
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -142,9 +150,7 @@ public class RxJavaTestFragment extends Fragment implements View.OnClickListener
             case R.id.btChangeValue:
 
                 int degree = temperature.getDegree() +3000;
-
                 temperature.setCurrentTemperature(degree);
-                updateView(temperature);
                 break;
             case R.id.btGitTest:
                 break;
